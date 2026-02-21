@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 //import '../task_provider.dart';
 import 'package:unfurl/features/tasks/task_model.dart';
 import 'package:unfurl/features/tasks/widgets/task_card.dart';
+import 'package:unfurl/shared/widgets/app_drawer.dart';
+import 'package:unfurl/shared/widgets/focus_button.dart';
+import 'package:unfurl/shared/widgets/color_cycle_button.dart';
 
 class TaskListPage extends StatefulWidget {
   const TaskListPage({super.key});
@@ -24,24 +27,64 @@ class _TaskListPageState extends State<TaskListPage> {
   Widget build(BuildContext context) {
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Your Tasks")),
-            body: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              itemCount: _tasks.length,
-              itemBuilder: (context, index) {
-                final task = _tasks[index];
-                return TaskCard(
-                  task: task,
-                  /*
-                  onToggleDone: () {
-                    setState(() {
-                      task.toggleDone();
-                    });
-                  },
-                  **/
-                );
-              },
-            ),
+        appBar: AppBar(title: const Text("Your Tasks")),
+        drawer: const AppDrawer(currentRoute: '/'),
+        body: Column(
+            children: [
+
+                Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: FocusButton(
+                                text: "FOCUS",
+                                onPressed: () {
+                                    Navigator.pushNamed(context, '/focus');
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ColorCycleButton(
+                                text: "Unload My Brain",
+                                onPressed: () {
+                                    Navigator.pushNamed(context, '/chatbot');
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                ),
+
+                Expanded (
+                    child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          itemCount: _tasks.length,
+                          itemBuilder: (context, index) {
+                            final task = _tasks[index];
+                            return TaskCard(
+                              task: task,
+                              /*
+                              onToggleDone: () {
+                                setState(() {
+                                  task.toggleDone();
+                                });
+                              },
+                              **/
+                            );
+                          },
+                        ),
+                ),
+
+            ]
+        ),
+
+
+
+
+
+
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddTaskDialog(context),
         child: const Icon(Icons.add),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:unfurl/shared/widgets/app_drawer.dart';
 
 class FocusPage extends StatefulWidget {
   const FocusPage({super.key});
@@ -16,6 +17,7 @@ class _FocusPageState extends State<FocusPage> {
                 backgroundColor: Theme.of(context).colorScheme.inversePrimary,
                 title: Text("FocusPage"),
             ),
+            drawer: const AppDrawer(currentRoute: '/focus'),
             body: Center(
                 child: Column(
                     mainAxisAlignment: .center,

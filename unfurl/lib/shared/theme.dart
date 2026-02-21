@@ -24,7 +24,7 @@ final ThemeData appTheme = ThemeData(
   // 🌸 App Bar
   appBarTheme: const AppBarTheme(
     centerTitle: true,
-    backgroundColor: Colors.transparent,
+    backgroundColor: Color(0xFFB39DDB),
     elevation: 0,
     foregroundColor: Colors.black87,
   ),

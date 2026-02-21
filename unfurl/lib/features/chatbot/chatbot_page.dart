@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:unfurl/shared/widgets/app_drawer.dart';
 
 class ChatbotPage extends StatefulWidget {
   const ChatbotPage({super.key});
@@ -16,6 +17,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                 backgroundColor: Theme.of(context).colorScheme.inversePrimary,
                 title: Text("ChatbotPage"),
             ),
+            drawer: const AppDrawer(currentRoute: '/chatbot'),
             body: Center(
                 child: Column(
                     mainAxisAlignment: .center,

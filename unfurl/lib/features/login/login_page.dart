@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:unfurl/shared/widgets/app_drawer.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
                 backgroundColor: Theme.of(context).colorScheme.inversePrimary,
                 title: Text("LoginPage"),
             ),
+            drawer: const AppDrawer(currentRoute: '/login'),
             body: Center(
                 child: Column(
                     mainAxisAlignment: .center,
