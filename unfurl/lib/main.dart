@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:unfurl/app/app.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
+/*
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -11,7 +12,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Unfurl',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -33,8 +34,10 @@ class MyApp extends StatelessWidget {
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
-}
+}**/
 
+
+/*
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -51,8 +54,8 @@ class MyHomePage extends StatefulWidget {
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
-}
-
+}**/
+/*
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
@@ -120,3 +123,4 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
+**/
