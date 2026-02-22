@@ -55,7 +55,7 @@ class _TaskListPageState extends State<TaskListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Today's Bouquet")),
+      appBar: AppBar(title: const Text("Today's Tasks")),
       drawer: const AppDrawer(currentRoute: '/'),
       body: Container(
         decoration: const BoxDecoration(gradient: blossomBackground),
