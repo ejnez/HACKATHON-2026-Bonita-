@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:unfurl/services/auth_service.dart';
 
 class AppDrawer extends StatelessWidget {
   final String currentRoute;
@@ -90,11 +92,34 @@ class AppDrawer extends StatelessWidget {
 
             const Divider(),
 
-            _buildItem(
-              context,
-              icon: Icons.favorite_border_rounded,
-              title: "Login",
-              route: '/login',
+
+            /// ⭐ Reactive Auth Button
+            StreamBuilder<User?>(
+              stream: AuthService.authStateChanges,
+              builder: (context, snapshot) {
+                final user = snapshot.data;
+                final loggedIn = user != null;
+
+
+                return ListTile(
+                  leading: Icon(
+                    loggedIn ? Icons.logout : Icons.login,
+                  ),
+                  title: Text(
+                    loggedIn ? "Logout" : "Login",
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+
+
+                    if (loggedIn) {
+                      await AuthService.signOut();
+                    } else {
+                      await AuthService.signInWithGoogle();
+                    }
+                  },
+                );
+              },
             ),
           ],
         ),
