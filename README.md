@@ -31,22 +31,22 @@ Unfurl is an AI-powered productivity app that unfurls messy thoughts into action
 7. Flower agent awards a flower
 8. Streak is updated if user earned at least one flower that day
 ### Backend API (Core)
-Chat / Task Generation
-POST /chat
-GET /chat/{session_id}/tasks
-Tasks / Timer / Completion
-GET /tasks/{user_id}
-POST /tasks/{task_id}/timer/start
-POST /tasks/{task_id}/timer/pause
-POST /tasks/{task_id}/timer/resume
-POST /tasks/complete
-Flowers / Streak
-POST /flowers/award
-GET /flowers/bouquet/{user_id}
-GET /flowers/trophy-room/{user_id}
-GET /flowers/streak/{user_id}
+* Chat / Task Generation
+* POST /chat
+* GET /chat/{session_id}/tasks
+* Tasks / Timer / Completion
+* GET /tasks/{user_id}
+* POST /tasks/{task_id}/timer/start
+* POST /tasks/{task_id}/timer/pause
+* POST /tasks/{task_id}/timer/resume
+* POST /tasks/complete
+* Flowers / Streak
+* POST /flowers/award
+* GET /flowers/bouquet/{user_id}
+* GET /flowers/trophy-room/{user_id}
+* GET /flowers/streak/{user_id}
 # Setup
-### 1. Backend
+### Backend:
 From repo root:
 
 pip install -r requirements.txt
@@ -58,7 +58,7 @@ backend/agents/floweragent/.env
 Run backend:
 
 uvicorn backend.api.main:app --reload --port 8000
-### 2. Frontend
+### Frontend:
 cd unfurl
 flutter pub get
 Run app:
@@ -67,7 +67,7 @@ flutter run -d chrome
 or:
 
 flutter run -d windows
-Environment Notes
+### Environment Notes
 If Windows desktop build fails with Firebase linker/toolchain errors, use VS Build Tools 2022 (MSVC v143), then run:
 flutter clean
 flutter pub get
