@@ -17,7 +17,7 @@ class _FocusPageState extends State<FocusPage> {
   Widget build(BuildContext context) {
         return Scaffold(
             appBar: AppBar(
-                title: const Text("Focus Bloom"),
+                title: const Text("Focus Timer"),
             ),
             drawer: const AppDrawer(currentRoute: '/focus'),
             body: Container(
