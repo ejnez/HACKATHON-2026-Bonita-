@@ -85,4 +85,81 @@ class TaskProvider {
         .map(Task.fromJson)
         .toList();
   }
+
+  Future<Map<String, dynamic>> completeTask({
+    required String taskId,
+    required String userId,
+    required int actualTimeSpentMinutes,
+  }) async {
+    final uri = Uri.parse('$_apiBase/tasks/complete');
+    late final http.Response res;
+    try {
+      res = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'task_id': taskId,
+              'user_id': userId,
+              'actual_time_spent_minutes': actualTimeSpentMinutes,
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw Exception('Complete task timed out.');
+    } catch (e) {
+      throw Exception('Cannot reach backend at $_apiBase. Error: $e');
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Complete task failed: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> awardFlower({
+    required String taskId,
+    required String userId,
+  }) async {
+    final uri = Uri.parse('$_apiBase/flowers/award');
+    late final http.Response res;
+    try {
+      res = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'task_id': taskId,
+              'user_id': userId,
+            }),
+          )
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw Exception('Award flower timed out.');
+    } catch (e) {
+      throw Exception('Cannot reach backend at $_apiBase. Error: $e');
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Award flower failed: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> completeTaskAndAward({
+    required String taskId,
+    required String userId,
+    required int actualTimeSpentMinutes,
+  }) async {
+    final completion = await completeTask(
+      taskId: taskId,
+      userId: userId,
+      actualTimeSpentMinutes: actualTimeSpentMinutes,
+    );
+    final award = await awardFlower(taskId: taskId, userId: userId);
+    return {
+      'completion': completion,
+      'award': award,
+    };
+  }
 }

@@ -3,6 +3,18 @@ import 'package:unfurl/features/tasks/task_provider.dart';
 import 'package:unfurl/shared/theme.dart';
 import 'package:unfurl/shared/widgets/app_drawer.dart';
 
+class _ChatMessage {
+  final String text;
+  final bool fromUser;
+  final bool isNotice;
+
+  const _ChatMessage({
+    required this.text,
+    required this.fromUser,
+    this.isNotice = false,
+  });
+}
+
 class ChatbotPage extends StatefulWidget {
   const ChatbotPage({super.key});
 
@@ -11,155 +23,471 @@ class ChatbotPage extends StatefulWidget {
 }
 
 class _ChatbotPageState extends State<ChatbotPage> {
-    static const String _demoUserId = 'demo-user';
-    static const String _demoSessionId = 'demo-session';
-    final TaskProvider _provider = TaskProvider();
-    final TextEditingController _controller = TextEditingController();
-    bool _loading = false;
-    String _status = 'Paste your brain dump and press send.';
-    List<Map<String, dynamic>> _generatedTasks = const [];
+  static const String _demoUserId = 'demo-user';
 
-    @override
-    void dispose() {
-      _controller.dispose();
-      super.dispose();
-    }
+  final TaskProvider _provider = TaskProvider();
+  final TextEditingController _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
-    Future<void> _send() async {
-      final text = _controller.text.trim();
-      if (text.isEmpty) {
-        setState(() {
-          _status = 'Please type your brain dump first.';
-        });
-        return;
-      }
+  bool _loading = false;
+  String _sessionId = _newSessionId();
+  List<Map<String, dynamic>> _generatedTasks = const [];
+  final List<_ChatMessage> _messages = const [
+    _ChatMessage(
+      text: 'Welcome to Bouquet. Paste your brain dump and I will organize it for you.',
+      fromUser: false,
+      isNotice: true,
+    ),
+  ].toList();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  static String _newSessionId() {
+    return 'demo-session-${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
+  }
+
+  Future<void> _send() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty || _loading) return;
+
+    _controller.clear();
+    setState(() {
+      _loading = true;
+      _messages.add(_ChatMessage(text: text, fromUser: true));
+    });
+    _scrollToBottom();
+
+    try {
+      final res = await _provider.sendBrainDump(
+        sessionId: _sessionId,
+        userId: _demoUserId,
+        message: text,
+      );
+      final ready = res['list_ready'] == true;
+      final tasks = (res['tasks'] as List<dynamic>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .toList(growable: false);
 
       setState(() {
-        _loading = true;
-        _status = 'Sending...';
+        _generatedTasks = ready ? tasks : const [];
+        _messages.add(
+          _ChatMessage(
+            text: ready
+                ? 'The list will be created soon.'
+                : (res['reply']?.toString() ?? 'I got your message.'),
+            fromUser: false,
+          ),
+        );
       });
 
-      try {
-        final res = await _provider.sendBrainDump(
-          sessionId: _demoSessionId,
-          userId: _demoUserId,
-          message: text,
-        );
-        final ready = res['list_ready'] == true;
-        final tasks = (res['tasks'] as List<dynamic>? ?? const [])
-            .whereType<Map<String, dynamic>>()
-            .toList(growable: false);
-        final count = tasks.length;
-        setState(() {
-          _generatedTasks = ready ? tasks : const [];
-          _status = ready
-              ? 'Task list ready. Saved $count tasks.'
-              : (res['reply']?.toString() ?? 'Agent replied.');
-        });
-      } catch (e) {
-        setState(() {
-          _generatedTasks = const [];
-          _status = 'Request failed: $e';
-        });
-      } finally {
-        if (mounted) {
-          setState(() {
-            _loading = false;
-          });
+      if (ready && tasks.isNotEmpty) {
+        _scrollToBottom();
+        await Future.delayed(const Duration(milliseconds: 900));
+        if (!mounted) return;
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(true);
+        } else {
+          Navigator.of(context).pushReplacementNamed('/');
         }
       }
+    } catch (e) {
+      setState(() {
+        _generatedTasks = const [];
+        _messages.add(
+          _ChatMessage(
+            text: 'Could not send right now: $e',
+            fromUser: false,
+            isNotice: true,
+          ),
+        );
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+        });
+      }
+      _scrollToBottom();
     }
+  }
 
-    @override
-    Widget build(BuildContext context) {
-        return Scaffold(
-            appBar: AppBar(
-                title: const Text("Unload My Brain"),
-            ),
-            drawer: const AppDrawer(currentRoute: '/chatbot'),
-            body: Container(
-                decoration: const BoxDecoration(gradient: blossomBackground),
-                child: Center(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Container(
-                      constraints: const BoxConstraints(maxWidth: 560),
-                      padding: const EdgeInsets.all(18),
+  void _clearConversation() {
+    setState(() {
+      _sessionId = _newSessionId();
+      _generatedTasks = const [];
+      _messages
+        ..clear()
+        ..add(
+          const _ChatMessage(
+            text: 'Conversation cleared. Share a new brain dump when you are ready.',
+            fromUser: false,
+            isNotice: true,
+          ),
+        );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Unload My Brain')),
+      drawer: const AppDrawer(currentRoute: '/chatbot'),
+      body: Container(
+        decoration: const BoxDecoration(gradient: blossomBackground),
+        child: SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 820),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.88),
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0xFFFFC9E0)),
+                        color: Colors.white.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFFFFD6E5)),
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Row(
                         children: [
-                          const Icon(Icons.auto_awesome, size: 32, color: blossomPink),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tell Bouquet everything on your mind.',
-                            style: Theme.of(context).textTheme.titleMedium,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 14),
-                          TextField(
-                            controller: _controller,
-                            minLines: 5,
-                            maxLines: 9,
-                            decoration: const InputDecoration(
-                              labelText: 'Brain dump',
-                              hintText: 'Study chapter 4, reply to emails, clean room...',
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              onPressed: _loading ? null : _send,
-                              icon: const Icon(Icons.send_rounded),
-                              label: Text(_loading ? 'Sending...' : 'Send to AI'),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _status,
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          if (_generatedTasks.isNotEmpty) ...[
-                            const SizedBox(height: 14),
-                            const Divider(),
-                            const SizedBox(height: 8),
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                'Your task list',
-                                style: Theme.of(context).textTheme.titleSmall,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ..._generatedTasks.map((task) {
-                              final rank = task['priority_rank']?.toString() ?? '-';
-                              final name = task['task_name']?.toString() ?? 'Untitled task';
-                              final mins = task['estimated_time']?.toString() ?? '?';
-                              return Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('$rank. '),
-                                    Expanded(child: Text('$name ($mins min)')),
-                                  ],
+                          const Icon(Icons.spa_rounded, color: blossomPink, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Brain Dump',
+                                  style: Theme.of(context).textTheme.titleSmall,
                                 ),
-                              );
-                            }),
-                          ],
+                                Text(
+                                  'Simple, calm, and focused.',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: _clearConversation,
+                            child: const Text('Clear'),
+                          ),
                         ],
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.82),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0xFFFFD8E7)),
+                        ),
+                        child: Column(
+                          children: [
+                            Expanded(
+                              child: ListView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.fromLTRB(12, 14, 12, 8),
+                                itemCount: _messages.length + (_loading ? 1 : 0),
+                                itemBuilder: (context, index) {
+                                  if (_loading && index == _messages.length) {
+                                    return const _TypingBubble();
+                                  }
+                                  final message = _messages[index];
+                                  return _ChatBubble(message: message);
+                                },
+                              ),
+                            ),
+                            if (_generatedTasks.isNotEmpty)
+                              _TaskSummary(tasks: _generatedTasks),
+                            _Composer(
+                              controller: _controller,
+                              loading: _loading,
+                              onSend: _send,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Composer extends StatelessWidget {
+  final TextEditingController controller;
+  final bool loading;
+  final VoidCallback onSend;
+
+  const _Composer({
+    required this.controller,
+    required this.loading,
+    required this.onSend,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFAFC),
+        border: Border(
+          top: BorderSide(color: blossomPink.withValues(alpha: 0.14)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFFFDCE9)),
+              ),
+              child: TextField(
+                controller: controller,
+                minLines: 1,
+                maxLines: 4,
+                enabled: !loading,
+                onSubmitted: (_) => onSend(),
+                textInputAction: TextInputAction.send,
+                decoration: const InputDecoration(
+                  hintText: 'Write what is on your mind...',
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton(
+            onPressed: loading ? null : onSend,
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(78, 44),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            child: loading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.1,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.send_rounded, size: 18),
+                      SizedBox(width: 4),
+                      Text('Send'),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChatBubble extends StatelessWidget {
+  final _ChatMessage message;
+
+  const _ChatBubble({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    if (message.isNotice) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 480),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF5FA),
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(color: const Color(0xFFFFE0EC)),
+            ),
+            child: Text(
+              message.text,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+        ),
+      );
     }
+
+    final alignment =
+        message.fromUser ? Alignment.centerRight : Alignment.centerLeft;
+    final bubbleColor =
+        message.fromUser ? blossomPink.withValues(alpha: 0.9) : Colors.white;
+    final textColor = message.fromUser ? Colors.white : cocoaText;
+
+    return Align(
+      alignment: alignment,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        constraints: const BoxConstraints(maxWidth: 500),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: bubbleColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: message.fromUser
+                ? blossomPink.withValues(alpha: 0.3)
+                : blossomPink.withValues(alpha: 0.14),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Text(
+          message.text,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: textColor),
+        ),
+      ),
+    );
+  }
+}
+
+class _TypingBubble extends StatelessWidget {
+  const _TypingBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: blossomPink.withValues(alpha: 0.16)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _Dot(color: blossomPink.withValues(alpha: 0.45)),
+            const SizedBox(width: 4),
+            _Dot(color: blossomPink.withValues(alpha: 0.7)),
+            const SizedBox(width: 4),
+            _Dot(color: blossomPink),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Dot extends StatelessWidget {
+  final Color color;
+
+  const _Dot({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    );
+  }
+}
+
+class _TaskSummary extends StatelessWidget {
+  final List<Map<String, dynamic>> tasks;
+
+  const _TaskSummary({required this.tasks});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(10, 0, 10, 6),
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF8FB),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFFDEEA)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Your List',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 6),
+          ...tasks.map((task) {
+            final rank = task['priority_rank']?.toString() ?? '-';
+            final name = task['task_name']?.toString() ?? 'Untitled task';
+            final mins = task['estimated_time']?.toString() ?? '?';
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 5),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: blossomPink.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: Text(
+                      rank,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text('$name  -  $mins min')),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
 }
 

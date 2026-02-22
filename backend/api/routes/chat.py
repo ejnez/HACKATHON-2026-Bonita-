@@ -132,11 +132,14 @@ def save_tasks_for_session(user_id: str, session_id: str, final_tasks: list[dict
             "estimated_subtasks": 1,
             "is_vague": False,
             "has_dependencies": False,
+            # A newly generated task list item should always start as not completed.
+            "completed": False,
+            "completed_at": None,
+            "actual_time_spent_minutes": None,
         }
 
         if not task_doc.exists:
             payload["created_at"] = now.isoformat()
-            payload["completed"] = False
             task_ref.set(payload)
         else:
             task_ref.set(payload, merge=True)
@@ -180,9 +183,9 @@ async def chat(body: ChatMessage):
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Prioritizer agent failed: {exc}") from exc
     final_tasks = parse_final_tasks(raw_agent_reply)
-    is_ready = final_tasks is not None
+    saved_tasks = save_tasks_for_session(body.user_id, body.session_id, final_tasks) if final_tasks is not None else []
+    is_ready = len(saved_tasks) > 0
     agent_reply = FINAL_LIST_MESSAGE if is_ready else raw_agent_reply
-    saved_tasks = save_tasks_for_session(body.user_id, body.session_id, final_tasks) if is_ready else []
 
     history.append({
         "role": "agent",
@@ -194,7 +197,7 @@ async def chat(body: ChatMessage):
         "user_id": body.user_id,
         "history": history,
         "list_ready": is_ready,
-        "final_tasks": final_tasks if is_ready else None,
+        "final_tasks": final_tasks if final_tasks is not None else None,
         "saved_tasks": saved_tasks if is_ready else [],
     }
     session_ref.set(payload)

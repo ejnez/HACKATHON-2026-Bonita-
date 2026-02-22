@@ -3,10 +3,12 @@ import '../task_model.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
+  final VoidCallback? onTap;
 
   const TaskCard({
     super.key,
     required this.task,
+    this.onTap,
   });
 
   Color _priorityColor(int p) {
@@ -32,13 +34,17 @@ class TaskCard extends StatelessWidget {
           border: Border.all(color: const Color(0xFFFFD4E6)),
         ),
         child: ListTile(
+          onTap: onTap,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          isThreeLine: true,
           leading: CircleAvatar(
             backgroundColor: priorityColor.withValues(alpha: 0.2),
             child: Icon(Icons.local_florist, color: priorityColor),
           ),
           title: Text(
             task.name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -60,7 +66,7 @@ class TaskCard extends StatelessWidget {
           ),
           trailing: task.isDone
               ? const Icon(Icons.check_circle, color: Color(0xFF6FAF98))
-              : null,
+              : const Icon(Icons.play_circle_fill_rounded, color: Color(0xFFFF6FAE)),
         ),
       ),
     );

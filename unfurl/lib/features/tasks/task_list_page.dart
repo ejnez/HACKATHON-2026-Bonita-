@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:unfurl/features/tasks/task_model.dart';
 import 'package:unfurl/features/tasks/task_provider.dart';
 import 'package:unfurl/features/tasks/widgets/task_card.dart';
+import 'package:unfurl/features/focus/focus_page.dart';
 import 'package:unfurl/shared/theme.dart';
 import 'package:unfurl/shared/widgets/app_drawer.dart';
 import 'package:unfurl/shared/widgets/focus_button.dart';
@@ -51,6 +52,29 @@ class _TaskListPageState extends State<TaskListPage> {
     }
   }
 
+  Future<void> _openFocusForTask(Task task) async {
+    if (task.isDone) return;
+    await Navigator.pushNamed(
+      context,
+      '/focus',
+      arguments: FocusSessionArgs(
+        taskId: task.id,
+        taskName: task.name,
+        estimatedMinutes: task.estimatedMinutes,
+      ),
+    );
+    if (mounted) {
+      await _loadTasks();
+    }
+  }
+
+  Future<void> _openChatbotAndRefresh() async {
+    await Navigator.pushNamed(context, '/chatbot');
+    if (mounted) {
+      await _loadTasks();
+    }
+  }
+
   //build page UI code
   @override
   Widget build(BuildContext context) {
@@ -94,7 +118,7 @@ class _TaskListPageState extends State<TaskListPage> {
                       Expanded(
                         child: ColorCycleButton(
                           text: "Unload Brain",
-                          onPressed: () => Navigator.pushNamed(context, '/chatbot'),
+                          onPressed: _openChatbotAndRefresh,
                         ),
                       ),
                     ],
@@ -126,16 +150,19 @@ class _TaskListPageState extends State<TaskListPage> {
                                     const SizedBox(height: 12),
                                     const Center(child: Text('No tasks yet.')),
                                   ],
-                                )
+                               )
                               : ListView.builder(
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
-                                  itemCount: _tasks.length,
-                                  itemBuilder: (context, index) {
-                                    final task = _tasks[index];
-                                    return TaskCard(task: task);
-                                  },
-                                ),
-                        ),
+                                  padding: const EdgeInsets.fromLTRB(0, 10, 0, 96),
+                                   itemCount: _tasks.length,
+                                   itemBuilder: (context, index) {
+                                     final task = _tasks[index];
+                                     return TaskCard(
+                                       task: task,
+                                       onTap: task.isDone ? null : () => _openFocusForTask(task),
+                                     );
+                                   },
+                                 ),
+                         ),
             ),
           ],
         ),
