@@ -88,6 +88,20 @@ def parse_award_response(reply: str) -> dict | None:
 # ---------------------------------------------------------------------------
 @router.post("/flowers/award")
 async def award_flowers(body: AwardRequest):
+    existing_award_doc = db.collection("flowers").document(body.task_id).get()
+    if existing_award_doc.exists:
+        existing_award = existing_award_doc.to_dict() or {}
+        if existing_award.get("user_id") != body.user_id:
+            raise HTTPException(status_code=403, detail="Task does not belong to this user.")
+        return {
+            "task_id": body.task_id,
+            "user_id": body.user_id,
+            "selected_flower": existing_award.get("flower_type_id"),
+            "tier": existing_award.get("tier"),
+            "congrats_message": existing_award.get("message"),
+            "earned_at": dt_to_iso(existing_award.get("earned_at")),
+        }
+
     # fetch completed_tasks record
     completed_doc = db.collection("completed_tasks").document(body.task_id).get()
     if not completed_doc.exists:

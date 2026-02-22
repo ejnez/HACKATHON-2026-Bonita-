@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
@@ -56,6 +57,52 @@ def parse_final_tasks(reply: str):
     return None
 
 
+def _safe_int(value, default: int) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def save_tasks_for_session(user_id: str, session_id: str, final_tasks: list[dict]) -> list[dict]:
+    now = datetime.now(timezone.utc)
+    saved_tasks = []
+
+    for idx, task in enumerate(final_tasks, start=1):
+        task_id = f"{session_id}-{idx}"
+        task_ref = db.collection("tasks").document(task_id)
+        task_doc = task_ref.get()
+
+        payload = {
+            "task_id": task_id,
+            "user_id": user_id,
+            "session_id": session_id,
+            "priority_rank": _safe_int(task.get("priority_rank"), idx),
+            "task_name": task.get("task_name"),
+            "category": task.get("category", "Other"),
+            "estimated_time": _safe_int(task.get("estimated_time"), 0),
+            "urgency": task.get("urgency"),
+            "stress_level": task.get("stress_level"),
+            "summary": task.get("summary"),
+            "hour_of_day": now.hour,
+            "day_of_week": now.weekday(),
+            "estimated_subtasks": 1,
+            "is_vague": False,
+            "has_dependencies": False,
+        }
+
+        if not task_doc.exists:
+            payload["created_at"] = now.isoformat()
+            payload["completed"] = False
+            task_ref.set(payload)
+        else:
+            task_ref.set(payload, merge=True)
+
+        saved_tasks.append(payload)
+
+    return saved_tasks
+
+
 router = APIRouter()
 
 class ChatMessage(BaseModel):
@@ -89,6 +136,7 @@ async def chat(body: ChatMessage):
     final_tasks = parse_final_tasks(raw_agent_reply)
     is_ready = final_tasks is not None
     agent_reply = FINAL_LIST_MESSAGE if is_ready else raw_agent_reply
+    saved_tasks = save_tasks_for_session(body.user_id, body.session_id, final_tasks) if is_ready else []
 
     history.append({
         "role": "agent",
@@ -101,6 +149,7 @@ async def chat(body: ChatMessage):
         "history": history,
         "list_ready": is_ready,
         "final_tasks": final_tasks if is_ready else None,
+        "saved_tasks": saved_tasks if is_ready else [],
     }
     session_ref.set(payload)
 
@@ -109,6 +158,7 @@ async def chat(body: ChatMessage):
         "reply": agent_reply,
         "history": history,
         "list_ready": is_ready,
+        "tasks": saved_tasks,
     }
 
 
@@ -131,5 +181,5 @@ async def get_final_task_list(session_id: str):
     return {
         "session_id": session_id,
         "list_ready": True,
-        "tasks": data.get("final_tasks", []),
+        "tasks": data.get("saved_tasks", []),
     }

@@ -1,87 +1,102 @@
 import 'package:flutter/material.dart';
 
-// we can customize this file to change the theme accross the entire app
+const Color blossomPink = Color(0xFFFF6FAE);
+const Color petalPeach = Color(0xFFFFE0CC);
+const Color roseCream = Color(0xFFFFF5F7);
+const Color sageGreen = Color(0xFF6FAF98);
+const Color cocoaText = Color(0xFF4E3344);
+
 final ThemeData appTheme = ThemeData(
   useMaterial3: true,
-
-  // 🌸 Color Scheme
+  fontFamily: 'Trebuchet MS',
   colorScheme: const ColorScheme(
     brightness: Brightness.light,
-    primary: Color(0xFFB39DDB),       // soft lavender/purple
+    primary: blossomPink,
     onPrimary: Colors.white,
-    secondary: Color(0xFF8BC5A0),     // pastel green accent
+    secondary: sageGreen,
     onSecondary: Colors.white,
-    error: Colors.redAccent,
+    error: Color(0xFFB3261E),
     onError: Colors.white,
-    background: Color(0xFFF9F7FF),    // very light lavender cream
-    onBackground: Colors.black87,
-    surface: Colors.white,
-    onSurface: Colors.black87,
+    surface: roseCream,
+    onSurface: cocoaText,
   ),
-
-  scaffoldBackgroundColor: const Color(0xFFF9F7FF),
-
-  // 🌸 App Bar
+  scaffoldBackgroundColor: roseCream,
   appBarTheme: const AppBarTheme(
     centerTitle: true,
-    backgroundColor: Color(0xFFB39DDB),
+    backgroundColor: Colors.transparent,
+    foregroundColor: cocoaText,
     elevation: 0,
-    foregroundColor: Colors.black87,
+    scrolledUnderElevation: 0,
   ),
-
-  // 💜 Buttons
+  cardTheme: CardThemeData(
+    color: Colors.white.withValues(alpha: 0.9),
+    elevation: 0,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+  ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFFB39DDB), // lavender
+      backgroundColor: blossomPink,
       foregroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-      ),
+      shadowColor: blossomPink.withValues(alpha: 0.25),
+      elevation: 3,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     ),
   ),
-
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
-    backgroundColor: Color(0xFFB39DDB), // lavender
+    backgroundColor: blossomPink,
     foregroundColor: Colors.white,
   ),
-
-  // 🌿 Input Fields
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
     fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    hintStyle: const TextStyle(color: Color(0xFFA27B90)),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: BorderSide.none,
+      borderSide: BorderSide(color: blossomPink.withValues(alpha: 0.15)),
     ),
-    focusedBorder: OutlineInputBorder(
+    enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
-      borderSide: const BorderSide(
-        color: Color(0xFFB39DDB), // lavender focus
-        width: 2,
-      ),
+      borderSide: BorderSide(color: blossomPink.withValues(alpha: 0.18)),
+    ),
+    focusedBorder: const OutlineInputBorder(
+      borderRadius: BorderRadius.all(Radius.circular(18)),
+      borderSide: BorderSide(color: blossomPink, width: 1.8),
     ),
   ),
-
-  // 💜 Bottom Navigation Bar
-  bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-    selectedItemColor: Color(0xFFB39DDB), // lavender
-    unselectedItemColor: Colors.grey,
-    showUnselectedLabels: true,
-    type: BottomNavigationBarType.fixed,
-  ),
-
-  // 🌸 Text
   textTheme: const TextTheme(
     titleLarge: TextStyle(
-      fontSize: 22,
-      fontWeight: FontWeight.w600,
-      color: Colors.black87,
+      fontSize: 24,
+      fontWeight: FontWeight.w800,
+      color: cocoaText,
+      letterSpacing: 0.2,
+    ),
+    titleMedium: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      color: cocoaText,
+    ),
+    bodyLarge: TextStyle(
+      fontSize: 16,
+      color: cocoaText,
+      height: 1.35,
     ),
     bodyMedium: TextStyle(
-      fontSize: 16,
-      color: Colors.black87,
+      fontSize: 14,
+      color: cocoaText,
+      height: 1.35,
     ),
   ),
 );
+
+const LinearGradient blossomBackground = LinearGradient(
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+  colors: [
+    roseCream,
+    petalPeach,
+    Color(0xFFFFE8F1),
+  ],
+);
+
