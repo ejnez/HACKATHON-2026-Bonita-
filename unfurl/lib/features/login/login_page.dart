@@ -31,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Bloom', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
+                        const Text('Unfurl', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
                         const SizedBox(height: 10),
                         Text('Sign in to grow your streak', style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 8),

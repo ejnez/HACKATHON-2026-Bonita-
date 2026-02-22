@@ -96,7 +96,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                           const Icon(Icons.auto_awesome, size: 32, color: blossomPink),
                           const SizedBox(height: 8),
                           Text(
-                            'Tell Bouquet everything on your mind.',
+                            'Tell Unfurl everything on your mind.',
                             style: Theme.of(context).textTheme.titleMedium,
                             textAlign: TextAlign.center,
                           ),
