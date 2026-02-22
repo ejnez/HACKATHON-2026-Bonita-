@@ -18,18 +18,19 @@ Unfurl is an AI-powered productivity app that unfurls messy thoughts into action
 * Dart
 * http
 * flutter_svg
-Backend: FastAPI, Python, Firebase Firestore, Google ADK agents
-Data: Firestore collections for tasks, sessions, completed tasks, flowers, training events
-Main User Flow
-User submits a brain dump in chat
-AI prioritizer returns structured tasks
-Tasks are saved and shown in task list
-User starts focus session on a task
-Timer state is tracked (frontend UI + backend cumulative truth)
-User completes task
-Flower agent awards a flower
-Streak is updated if user earned at least one flower that day
-Backend API (Core)
+### Backend:
+* FastAPI, Python, Firebase Firestore, Google ADK agents
+* Data: Firestore collections for tasks, sessions, completed tasks, flowers, training events
+# Main User Flow
+1. User submits a brain dump in chat
+2. AI prioritizer returns structured tasks
+3. Tasks are saved and shown in task list
+4. User starts focus session on a task
+5. Timer state is tracked (frontend UI + backend cumulative truth)
+6. User completes task
+7. Flower agent awards a flower
+8. Streak is updated if user earned at least one flower that day
+### Backend API (Core)
 Chat / Task Generation
 POST /chat
 GET /chat/{session_id}/tasks
@@ -44,8 +45,8 @@ POST /flowers/award
 GET /flowers/bouquet/{user_id}
 GET /flowers/trophy-room/{user_id}
 GET /flowers/streak/{user_id}
-Setup
-1. Backend
+# Setup
+### 1. Backend
 From repo root:
 
 pip install -r requirements.txt
@@ -57,7 +58,7 @@ backend/agents/floweragent/.env
 Run backend:
 
 uvicorn backend.api.main:app --reload --port 8000
-2. Frontend
+### 2. Frontend
 cd unfurl
 flutter pub get
 Run app:
@@ -77,7 +78,7 @@ The app name is Unfurl.
 App icon asset is at:
 
 unfurl_icon.png
-Status
+### Status
 This project includes working flows for:
 
 AI task generation
