@@ -136,6 +136,10 @@ def save_tasks_for_session(user_id: str, session_id: str, final_tasks: list[dict
             "completed": False,
             "completed_at": None,
             "actual_time_spent_minutes": None,
+            "time_spent_seconds": 0,
+            "time_spent_minutes": 0,
+            "timer_started_at": None,
+            "is_active": False,
         }
 
         if not task_doc.exists:

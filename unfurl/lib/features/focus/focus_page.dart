@@ -41,6 +41,7 @@ class _FocusPageState extends State<FocusPage> {
 
   FocusSessionArgs? _args;
   bool _argsLoaded = false;
+  bool _hydratingFromBackend = false;
 
   @override
   void didChangeDependencies() {
@@ -54,12 +55,16 @@ class _FocusPageState extends State<FocusPage> {
           : 25;
       _totalSeconds = _baseMinutes * 60;
       _remainingSeconds = _totalSeconds;
+      unawaited(_hydrateTimerFromBackend());
     }
     _argsLoaded = true;
   }
 
   @override
   void dispose() {
+    if (_running) {
+      unawaited(_pauseBackendTimerSilently());
+    }
     _timer?.cancel();
     super.dispose();
   }
@@ -71,25 +76,29 @@ class _FocusPageState extends State<FocusPage> {
 
   int get _elapsedSeconds => _totalSeconds - _remainingSeconds;
 
+  int _asInt(dynamic value, {int fallback = 0}) {
+    if (value is int) return value;
+    return int.tryParse('${value ?? ''}') ?? fallback;
+  }
+
   String _formatClock(int seconds) {
     final m = (seconds ~/ 60).toString().padLeft(2, '0');
     final s = (seconds % 60).toString().padLeft(2, '0');
     return '$m:$s';
   }
 
-  void _startOrPause() {
-    if (_finishing) return;
-    if (_running) {
-      _timer?.cancel();
-      setState(() => _running = false);
-      return;
+  Future<void> _pauseBackendTimerSilently() async {
+    final taskId = _args?.taskId;
+    if (taskId == null || taskId.isEmpty) return;
+    try {
+      await _provider.pauseTaskTimer(taskId: taskId);
+    } catch (_) {
+      // best-effort on navigation away
     }
+  }
 
-    setState(() {
-      _running = true;
-      _awardResponse = null;
-      _awardError = false;
-    });
+  void _startLocalTicker() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       if (!mounted) return;
       if (_remainingSeconds <= 1) {
@@ -103,6 +112,95 @@ class _FocusPageState extends State<FocusPage> {
       }
       setState(() => _remainingSeconds -= 1);
     });
+  }
+
+  Future<void> _hydrateTimerFromBackend() async {
+    if (_hydratingFromBackend) return;
+    final taskId = _args?.taskId;
+    if (taskId == null || taskId.isEmpty) return;
+
+    _hydratingFromBackend = true;
+    try {
+      final task = await _provider.fetchTaskById(userId: _demoUserId, taskId: taskId);
+      if (!mounted || task == null) return;
+
+      final spentMinutes = _asInt(task['time_spent_minutes'], fallback: 0);
+      final spentSecondsStored = _asInt(task['time_spent_seconds'], fallback: spentMinutes * 60);
+      final isActive = task['is_active'] == true;
+      final startedAtRaw = task['timer_started_at']?.toString();
+
+      var spentSeconds = spentSecondsStored;
+      if (isActive && startedAtRaw != null && startedAtRaw.isNotEmpty) {
+        try {
+          final startedAt = DateTime.parse(startedAtRaw);
+          final now = DateTime.now().toUtc();
+          final startedUtc = startedAt.toUtc();
+          spentSeconds += now.difference(startedUtc).inSeconds.clamp(0, 86400 * 3);
+        } catch (_) {
+          // Keep accumulated minutes if timestamp format is unexpected.
+        }
+      }
+
+      final remaining = (_totalSeconds - spentSeconds).clamp(0, _totalSeconds);
+      setState(() {
+        _remainingSeconds = remaining;
+        _running = isActive && remaining > 0;
+      });
+
+      if (_running) {
+        _startLocalTicker();
+      }
+    } catch (_) {
+      // If fetch fails, continue with local initial timer.
+    } finally {
+      _hydratingFromBackend = false;
+    }
+  }
+
+  Future<bool> _syncTimerStateWithBackend({required bool start}) async {
+    final taskId = _args?.taskId;
+    if (taskId == null || taskId.isEmpty) return true;
+
+    try {
+      if (start) {
+        final isResume = _elapsedSeconds > 0;
+        if (isResume) {
+          await _provider.resumeTaskTimer(taskId: taskId);
+        } else {
+          await _provider.startTaskTimer(taskId: taskId);
+        }
+      } else {
+        await _provider.pauseTaskTimer(taskId: taskId);
+      }
+      return true;
+    } catch (e) {
+      if (!mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Timer sync failed: $e')),
+      );
+      return false;
+    }
+  }
+
+  void _startOrPause() async {
+    if (_finishing) return;
+    if (_running) {
+      final ok = await _syncTimerStateWithBackend(start: false);
+      if (!ok) return;
+      _timer?.cancel();
+      setState(() => _running = false);
+      return;
+    }
+
+    final ok = await _syncTimerStateWithBackend(start: true);
+    if (!ok) return;
+
+    setState(() {
+      _running = true;
+      _awardResponse = null;
+      _awardError = false;
+    });
+    _startLocalTicker();
   }
 
   void _extendByFive() {
@@ -145,7 +243,7 @@ class _FocusPageState extends State<FocusPage> {
         barrierDismissible: false,
         builder: (context) {
           return AlertDialog(
-            title: const Text('Bloom Earned'),
+            title: const Text('Unfurl Reward Earned'),
             content: Text('$flower\n\n$message'),
             actions: [
               TextButton(
@@ -182,7 +280,7 @@ class _FocusPageState extends State<FocusPage> {
   Widget build(BuildContext context) {
     final taskName = _args?.taskName ?? 'General Focus Session';
     return Scaffold(
-      appBar: AppBar(title: const Text('Focus Bloom')),
+      appBar: AppBar(title: const Text('Unfurl Focus')),
       drawer: const AppDrawer(currentRoute: '/focus'),
       body: Container(
         decoration: const BoxDecoration(gradient: blossomBackground),
@@ -196,7 +294,7 @@ class _FocusPageState extends State<FocusPage> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.84),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFFFD9EA)),
+                      border: Border.all(color: const Color(0xFFD8E8E0)),
                     ),
                     child: Stack(
                       children: [
@@ -217,11 +315,11 @@ class _FocusPageState extends State<FocusPage> {
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.92),
                               borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: const Color(0xFFFFDAEA)),
+                              border: Border.all(color: const Color(0xFFD8E8E0)),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.task_alt_rounded, color: blossomPink, size: 18),
+                                const Icon(Icons.task_alt_rounded, color: sageGreen, size: 18),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -251,9 +349,16 @@ class _FocusPageState extends State<FocusPage> {
                           child: Container(
                             padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.92),
+                              color: const Color(0xFFF7FBF8).withValues(alpha: 0.94),
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: const Color(0xFFFFD8E8)),
+                              border: Border.all(color: const Color(0xFFD6E8DF)),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color.fromRGBO(32, 56, 45, 0.08),
+                                  blurRadius: 14,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -261,8 +366,8 @@ class _FocusPageState extends State<FocusPage> {
                                 LinearProgressIndicator(
                                   value: _progress,
                                   minHeight: 10,
-                                  backgroundColor: const Color(0xFFFFEAF4),
-                                  color: blossomPink,
+                                  backgroundColor: const Color(0xFFE6EEE9),
+                                  color: sageGreen,
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 const SizedBox(height: 10),
@@ -273,6 +378,10 @@ class _FocusPageState extends State<FocusPage> {
                                         onPressed: (_running || _finishing) ? null : _finishSession,
                                         icon: const Icon(Icons.done_rounded),
                                         label: const Text('Finish now'),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: const Color(0xFF35584A),
+                                          side: const BorderSide(color: Color(0xFFBFD8CC)),
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -281,6 +390,10 @@ class _FocusPageState extends State<FocusPage> {
                                         onPressed: _finishing ? null : _extendByFive,
                                         icon: const Icon(Icons.add_alarm_rounded),
                                         label: const Text('+5 min'),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: const Color(0xFF35584A),
+                                          side: const BorderSide(color: Color(0xFFBFD8CC)),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -290,6 +403,10 @@ class _FocusPageState extends State<FocusPage> {
                                   width: double.infinity,
                                   child: ElevatedButton.icon(
                                     onPressed: _finishing ? null : _startOrPause,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF6FAF98),
+                                      foregroundColor: Colors.white,
+                                    ),
                                     icon: _finishing
                                         ? const SizedBox(
                                             width: 16,
@@ -842,7 +959,7 @@ class _WanderingBeeState extends State<_WanderingBee> with SingleTickerProviderS
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.94),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFFFD8E8)),
+                    border: Border.all(color: const Color(0xFFD8E8E0)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.06),
@@ -866,7 +983,7 @@ class _WanderingBeeState extends State<_WanderingBee> with SingleTickerProviderS
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.78),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFFFD8E8)),
+                    border: Border.all(color: const Color(0xFFD8E8E0)),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.10),
@@ -881,7 +998,7 @@ class _WanderingBeeState extends State<_WanderingBee> with SingleTickerProviderS
                       fit: BoxFit.cover,
                       errorBuilder: (context, _, __) => const Icon(
                         Icons.emoji_nature_rounded,
-                        color: blossomPink,
+                        color: sageGreen,
                         size: 50,
                       ),
                     ),

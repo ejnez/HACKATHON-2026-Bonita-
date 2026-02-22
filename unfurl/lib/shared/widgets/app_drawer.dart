@@ -16,7 +16,7 @@ class AppDrawer extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFFFF8FB), Color(0xFFFFEBF4)],
+            colors: [Color(0xFFF7F8F5), Color(0xFFEAF1EC)],
           ),
         ),
         child: ListView(
@@ -27,13 +27,13 @@ class AppDrawer extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFFF77B2), Color(0xFFFFA077)],
+                  colors: [Color(0xFF6FAF98), Color(0xFF8CB29E)],
                 ),
               ),
               child: Align(
                 alignment: Alignment.bottomLeft,
                 child: Text(
-                  "Bouquet",
+                  "Unfurl",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,
@@ -96,17 +96,17 @@ class AppDrawer extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: selected ? Theme.of(context).colorScheme.primary : const Color(0xFF9D6D84),
+        color: selected ? Theme.of(context).colorScheme.primary : const Color(0xFF6A7C74),
       ),
       title: Text(
         title,
         style: TextStyle(
-          color: selected ? Theme.of(context).colorScheme.primary : const Color(0xFF6C4D5E),
+          color: selected ? Theme.of(context).colorScheme.primary : const Color(0xFF4F635A),
           fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
         ),
       ),
       selected: selected,
-      selectedTileColor: const Color(0xFFFFE4F0),
+      selectedTileColor: const Color(0xFFE1EEE7),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onTap: () {
         Navigator.pop(context); // close drawer

@@ -12,10 +12,10 @@ class TaskCard extends StatelessWidget {
   });
 
   Color _priorityColor(int p) {
-    if (p <= 1) return const Color(0xFFFF7BAE);
-    if (p <= 3) return const Color(0xFFFFB866);
+    if (p <= 1) return const Color(0xFF5F8F7B);
+    if (p <= 3) return const Color(0xFFB79A67);
     if (p <= 6) return const Color(0xFF73BE93);
-    return const Color(0xFF8A92D4);
+    return const Color(0xFF7891A8);
   }
 
   @override
@@ -29,9 +29,9 @@ class TaskCard extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.white, Color(0xFFFFF4FA)],
+            colors: [Colors.white, Color(0xFFF2F8F4)],
           ),
-          border: Border.all(color: const Color(0xFFFFD4E6)),
+          border: Border.all(color: const Color(0xFFD8E6DE)),
         ),
         child: ListTile(
           onTap: onTap,
@@ -58,7 +58,7 @@ class TaskCard extends StatelessWidget {
               runSpacing: 6,
               children: [
                 _chip('P${task.priority}', priorityColor),
-                _chip(task.category, const Color(0xFF8F6A80)),
+                _chip(task.category, const Color(0xFF657B72)),
                 if (task.estimatedMinutes != null)
                   _chip('${task.estimatedMinutes} min', const Color(0xFF6FAF98)),
               ],
@@ -66,7 +66,7 @@ class TaskCard extends StatelessWidget {
           ),
           trailing: task.isDone
               ? const Icon(Icons.check_circle, color: Color(0xFF6FAF98))
-              : const Icon(Icons.play_circle_fill_rounded, color: Color(0xFFFF6FAE)),
+              : const Icon(Icons.play_circle_fill_rounded, color: Color(0xFF5F8F7B)),
         ),
       ),
     );

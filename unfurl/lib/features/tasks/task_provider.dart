@@ -86,6 +86,39 @@ class TaskProvider {
         .toList();
   }
 
+  Future<Map<String, dynamic>?> fetchTaskById({
+    required String userId,
+    required String taskId,
+  }) async {
+    final uri = Uri.parse('$_apiBase/tasks/$userId');
+    late final http.Response res;
+    try {
+      res = await http.get(uri).timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw Exception(
+        'Fetch task state timed out. Check that backend is running and API host is correct.',
+      );
+    } catch (e) {
+      throw Exception(
+        'Cannot reach backend at $_apiBase. If using a physical device, run with --dart-define=API_BASE_URL=http://<your-pc-ip>:8000. Error: $e',
+      );
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Fetch task state failed: ${res.statusCode} ${res.body}');
+    }
+
+    final data = jsonDecode(res.body) as Map<String, dynamic>;
+    final tasksJson = (data['tasks'] as List<dynamic>? ?? const []);
+    for (final item in tasksJson) {
+      if (item is Map<String, dynamic> &&
+          (item['task_id']?.toString() == taskId || item['id']?.toString() == taskId)) {
+        return item;
+      }
+    }
+    return null;
+  }
+
   Future<Map<String, dynamic>> completeTask({
     required String taskId,
     required String userId,
@@ -113,6 +146,78 @@ class TaskProvider {
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('Complete task failed: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> startTaskTimer({
+    required String taskId,
+  }) async {
+    final uri = Uri.parse('$_apiBase/tasks/$taskId/timer/start');
+    late final http.Response res;
+    try {
+      res = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw Exception('Start timer timed out.');
+    } catch (e) {
+      throw Exception('Cannot reach backend at $_apiBase. Error: $e');
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Start timer failed: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> pauseTaskTimer({
+    required String taskId,
+  }) async {
+    final uri = Uri.parse('$_apiBase/tasks/$taskId/timer/pause');
+    late final http.Response res;
+    try {
+      res = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw Exception('Pause timer timed out.');
+    } catch (e) {
+      throw Exception('Cannot reach backend at $_apiBase. Error: $e');
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Pause timer failed: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> resumeTaskTimer({
+    required String taskId,
+  }) async {
+    final uri = Uri.parse('$_apiBase/tasks/$taskId/timer/resume');
+    late final http.Response res;
+    try {
+      res = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw Exception('Resume timer timed out.');
+    } catch (e) {
+      throw Exception('Cannot reach backend at $_apiBase. Error: $e');
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Resume timer failed: ${res.statusCode} ${res.body}');
     }
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
@@ -161,5 +266,43 @@ class TaskProvider {
       'completion': completion,
       'award': award,
     };
+  }
+
+  Future<Map<String, dynamic>> fetchTodayBouquet({
+    required String userId,
+  }) async {
+    final uri = Uri.parse('$_apiBase/flowers/bouquet/$userId');
+    late final http.Response res;
+    try {
+      res = await http.get(uri).timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw Exception('Fetch bouquet timed out.');
+    } catch (e) {
+      throw Exception('Cannot reach backend at $_apiBase. Error: $e');
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Fetch bouquet failed: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> fetchFlowerStreak({
+    required String userId,
+  }) async {
+    final uri = Uri.parse('$_apiBase/flowers/streak/$userId');
+    late final http.Response res;
+    try {
+      res = await http.get(uri).timeout(const Duration(seconds: 20));
+    } on TimeoutException {
+      throw Exception('Fetch streak timed out.');
+    } catch (e) {
+      throw Exception('Cannot reach backend at $_apiBase. Error: $e');
+    }
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Fetch streak failed: ${res.statusCode} ${res.body}');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
   }
 }

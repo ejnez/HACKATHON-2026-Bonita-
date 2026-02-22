@@ -26,6 +26,73 @@ def dt_to_iso(value):
     return value.isoformat() if hasattr(value, "isoformat") else value
 
 
+def _as_utc_date(value):
+    if value is None:
+        return None
+    if hasattr(value, "date"):
+        try:
+            return value.date()
+        except Exception:
+            return None
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        try:
+            return datetime.fromisoformat(text.replace("Z", "+00:00")).date()
+        except ValueError:
+            try:
+                return datetime.fromisoformat(text[:10]).date()
+            except ValueError:
+                return None
+    return None
+
+
+def compute_flower_streak(user_id: str) -> dict:
+    docs = db.collection("flowers").where("user_id", "==", user_id).stream()
+    earned_dates = set()
+    last_earned = None
+
+    for doc in docs:
+        data = doc.to_dict() or {}
+        earned_at = data.get("earned_at")
+        earned_date = _as_utc_date(earned_at)
+        if earned_date is None:
+            continue
+        earned_dates.add(earned_date)
+        if last_earned is None or earned_date > last_earned:
+            last_earned = earned_date
+
+    if not earned_dates:
+        return {
+            "current_streak_days": 0,
+            "last_earned_date": None,
+        }
+
+    today = datetime.now(timezone.utc).date()
+    yesterday = today - timedelta(days=1)
+
+    if today in earned_dates:
+        cursor = today
+    elif yesterday in earned_dates:
+        cursor = yesterday
+    else:
+        return {
+            "current_streak_days": 0,
+            "last_earned_date": last_earned.isoformat() if last_earned else None,
+        }
+
+    streak = 0
+    while cursor in earned_dates:
+        streak += 1
+        cursor -= timedelta(days=1)
+
+    return {
+        "current_streak_days": streak,
+        "last_earned_date": last_earned.isoformat() if last_earned else None,
+    }
+
+
 async def call_flower_agent(user_id: str, session_id: str, text: str) -> str:
     existing = await session_service.get_session(
         app_name=APP_NAME,
@@ -93,6 +160,7 @@ async def award_flowers(body: AwardRequest):
         existing_award = existing_award_doc.to_dict() or {}
         if existing_award.get("user_id") != body.user_id:
             raise HTTPException(status_code=403, detail="Task does not belong to this user.")
+        streak = compute_flower_streak(body.user_id)
         return {
             "task_id": body.task_id,
             "user_id": body.user_id,
@@ -100,6 +168,8 @@ async def award_flowers(body: AwardRequest):
             "tier": existing_award.get("tier"),
             "congrats_message": existing_award.get("message"),
             "earned_at": dt_to_iso(existing_award.get("earned_at")),
+            "current_streak_days": streak["current_streak_days"],
+            "last_earned_date": streak["last_earned_date"],
         }
 
     # fetch completed_tasks record
@@ -158,6 +228,7 @@ async def award_flowers(body: AwardRequest):
         "message": award["congrats_message"],
         "earned_at": awarded_at,
     })
+    streak = compute_flower_streak(body.user_id)
 
     return {
         "task_id": body.task_id,
@@ -166,6 +237,8 @@ async def award_flowers(body: AwardRequest):
         "tier": award["tier"],
         "congrats_message": award["congrats_message"],
         "earned_at": awarded_at.isoformat(),
+        "current_streak_days": streak["current_streak_days"],
+        "last_earned_date": streak["last_earned_date"],
     }
 
 
@@ -178,24 +251,28 @@ async def get_active_bouquet(user_id: str):
     today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     tomorrow_start = today_start + timedelta(days=1)
 
-    docs = (
-        db.collection("flowers")
-        .where("user_id", "==", user_id)
-        .where("earned_at", ">=", today_start)
-        .where("earned_at", "<", tomorrow_start)
-        .stream()
-    )
+    # Query by user only to avoid requiring a composite Firestore index
+    # for user_id + earned_at range filters.
+    docs = db.collection("flowers").where("user_id", "==", user_id).stream()
 
     flowers = []
     for doc in docs:
         data = doc.to_dict() or {}
+        earned_at_raw = data.get("earned_at")
+        earned_date = _as_utc_date(earned_at_raw)
+        if earned_date is None:
+            continue
+        earned_day_start = datetime.combine(earned_date, datetime.min.time(), tzinfo=timezone.utc)
+        if not (today_start <= earned_day_start < tomorrow_start):
+            continue
+
         flowers.append({
             "flower_id": doc.id,
             "task_id": data.get("task_id"),
             "flower_type_id": data.get("flower_type_id"),
             "tier": data.get("tier"),
             "message": data.get("message"),
-            "earned_at": dt_to_iso(data.get("earned_at")),
+            "earned_at": dt_to_iso(earned_at_raw),
         })
 
     return {
@@ -247,4 +324,18 @@ async def get_trophy_room(user_id: str):
     return {
         "user_id": user_id,
         "bouquets": bouquets,
+    }
+
+
+# ---------------------------------------------------------------------------
+# GET /flowers/streak/{user_id}
+# Returns the user's current consecutive-day flower streak.
+# ---------------------------------------------------------------------------
+@router.get("/flowers/streak/{user_id}")
+async def get_flower_streak(user_id: str):
+    streak = compute_flower_streak(user_id)
+    return {
+        "user_id": user_id,
+        "current_streak_days": streak["current_streak_days"],
+        "last_earned_date": streak["last_earned_date"],
     }

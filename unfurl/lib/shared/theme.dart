@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-const Color blossomPink = Color(0xFFFF6FAE);
-const Color petalPeach = Color(0xFFFFE0CC);
-const Color roseCream = Color(0xFFFFF5F7);
+const Color blossomPink = Color(0xFF5F8F7B);
+const Color petalPeach = Color(0xFFF4E7D6);
+const Color roseCream = Color(0xFFF8F7F3);
 const Color sageGreen = Color(0xFF6FAF98);
-const Color cocoaText = Color(0xFF4E3344);
+const Color cocoaText = Color(0xFF33443D);
 
 final ThemeData appTheme = ThemeData(
   useMaterial3: true,
@@ -50,7 +50,7 @@ final ThemeData appTheme = ThemeData(
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
     fillColor: Colors.white,
-    hintStyle: const TextStyle(color: Color(0xFFA27B90)),
+    hintStyle: const TextStyle(color: Color(0xFF7D8E86)),
     contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(18),
@@ -96,7 +96,7 @@ const LinearGradient blossomBackground = LinearGradient(
   colors: [
     roseCream,
     petalPeach,
-    Color(0xFFFFE8F1),
+    Color(0xFFEAF4EE),
   ],
 );
 

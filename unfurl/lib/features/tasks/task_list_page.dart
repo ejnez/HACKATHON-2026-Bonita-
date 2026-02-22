@@ -79,7 +79,7 @@ class _TaskListPageState extends State<TaskListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Today's Bouquet")),
+      appBar: AppBar(title: const Text("Today's Unfurl")),
       drawer: const AppDrawer(currentRoute: '/'),
       body: Container(
         decoration: const BoxDecoration(gradient: blossomBackground),
@@ -91,7 +91,7 @@ class _TaskListPageState extends State<TaskListPage> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(22),
                 color: Colors.white.withValues(alpha: 0.8),
-                border: Border.all(color: const Color(0xFFFFCFE3)),
+                border: Border.all(color: const Color(0xFFD4E5DC)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

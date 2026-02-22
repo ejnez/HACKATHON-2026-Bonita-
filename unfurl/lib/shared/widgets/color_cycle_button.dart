@@ -19,10 +19,10 @@ class _ColorCycleButtonState extends State<ColorCycleButton>
   late AnimationController _controller;
 
   final List<Color> colors = [
-        Color(0xFFFF8CB9),
-        Color(0xFFFFB68F),
-        Color(0xFFFF7AAE),
-        Color(0xFFFF9EC6),
+        Color(0xFF7FAF9B),
+        Color(0xFFB4C8A5),
+        Color(0xFF8DAF9B),
+        Color(0xFFC7D9C3),
   ];
 
   @override
@@ -61,9 +61,9 @@ class _ColorCycleButtonState extends State<ColorCycleButton>
         final currentColor = getCurrentColor();
         return OutlinedButton(
           style: OutlinedButton.styleFrom(
-            backgroundColor: const Color(0xFFFFF7FB),
+            backgroundColor: const Color(0xFFF7FAF7),
             side: BorderSide(color: currentColor.withValues(alpha: 0.7), width: 2),
-            foregroundColor: const Color(0xFF7D3A5B),
+            foregroundColor: const Color(0xFF3E5B4E),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),

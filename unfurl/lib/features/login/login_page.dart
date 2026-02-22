@@ -26,12 +26,12 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.92),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFFFCFE3)),
+                      border: Border.all(color: const Color(0xFFD4E5DC)),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Bloom', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
+                        const Text('Unfurl', style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800)),
                         const SizedBox(height: 10),
                         Text('Sign in to grow your streak', style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 8),

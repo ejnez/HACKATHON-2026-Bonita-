@@ -34,7 +34,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
   List<Map<String, dynamic>> _generatedTasks = const [];
   final List<_ChatMessage> _messages = const [
     _ChatMessage(
-      text: 'Welcome to Bouquet. Paste your brain dump and I will organize it for you.',
+      text: 'Welcome to Unfurl. Paste your brain dump and I will organize it for you.',
       fromUser: false,
       isNotice: true,
     ),
@@ -163,11 +163,11 @@ class _ChatbotPageState extends State<ChatbotPage> {
                       decoration: BoxDecoration(
                         color: Colors.white.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: const Color(0xFFFFD6E5)),
+                        border: Border.all(color: const Color(0xFFD7E7DE)),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.spa_rounded, color: blossomPink, size: 20),
+                          const Icon(Icons.spa_rounded, color: sageGreen, size: 20),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
@@ -197,7 +197,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.82),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFFFD8E7)),
+                          border: Border.all(color: const Color(0xFFD9E9E0)),
                         ),
                         child: Column(
                           children: [
@@ -253,9 +253,9 @@ class _Composer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFAFC),
+        color: const Color(0xFFF8FBF8),
         border: Border(
-          top: BorderSide(color: blossomPink.withValues(alpha: 0.14)),
+          top: BorderSide(color: sageGreen.withValues(alpha: 0.18)),
         ),
       ),
       child: Row(
@@ -265,7 +265,7 @@ class _Composer extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFFFFDCE9)),
+                border: Border.all(color: const Color(0xFFDCE9E2)),
               ),
               child: TextField(
                 controller: controller,
@@ -334,9 +334,9 @@ class _ChatBubble extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 480),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF5FA),
+              color: const Color(0xFFF4F8F5),
               borderRadius: BorderRadius.circular(11),
-              border: Border.all(color: const Color(0xFFFFE0EC)),
+              border: Border.all(color: const Color(0xFFDDEAE3)),
             ),
             child: Text(
               message.text,
@@ -351,7 +351,7 @@ class _ChatBubble extends StatelessWidget {
     final alignment =
         message.fromUser ? Alignment.centerRight : Alignment.centerLeft;
     final bubbleColor =
-        message.fromUser ? blossomPink.withValues(alpha: 0.9) : Colors.white;
+        message.fromUser ? sageGreen.withValues(alpha: 0.92) : Colors.white;
     final textColor = message.fromUser ? Colors.white : cocoaText;
 
     return Align(
@@ -365,8 +365,8 @@ class _ChatBubble extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: message.fromUser
-                ? blossomPink.withValues(alpha: 0.3)
-                : blossomPink.withValues(alpha: 0.14),
+                ? sageGreen.withValues(alpha: 0.28)
+                : sageGreen.withValues(alpha: 0.14),
           ),
           boxShadow: [
             BoxShadow(
@@ -400,16 +400,16 @@ class _TypingBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: blossomPink.withValues(alpha: 0.16)),
+          border: Border.all(color: sageGreen.withValues(alpha: 0.18)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _Dot(color: blossomPink.withValues(alpha: 0.45)),
+            _Dot(color: sageGreen.withValues(alpha: 0.45)),
             const SizedBox(width: 4),
-            _Dot(color: blossomPink.withValues(alpha: 0.7)),
+            _Dot(color: sageGreen.withValues(alpha: 0.7)),
             const SizedBox(width: 4),
-            _Dot(color: blossomPink),
+            _Dot(color: sageGreen),
           ],
         ),
       ),
@@ -443,9 +443,9 @@ class _TaskSummary extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(10, 0, 10, 6),
       padding: const EdgeInsets.fromLTRB(12, 9, 12, 9),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8FB),
+        color: const Color(0xFFF3F8F4),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFDEEA)),
+        border: Border.all(color: const Color(0xFFDBE9E1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,7 +469,7 @@ class _TaskSummary extends StatelessWidget {
                     height: 22,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: blossomPink.withValues(alpha: 0.14),
+                      color: sageGreen.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(11),
                     ),
                     child: Text(

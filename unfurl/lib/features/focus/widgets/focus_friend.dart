@@ -128,7 +128,7 @@ class _FocusFriendState extends State<FocusFriend> {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFFD8E8)),
+        border: Border.all(color: const Color(0xFFD8E8E0)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -142,9 +142,9 @@ class _FocusFriendState extends State<FocusFriend> {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF6FB),
+                        color: const Color(0xFFF5F9F6),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFFFE1EE)),
+                        border: Border.all(color: const Color(0xFFDCEBE3)),
                       ),
                     ),
                   ),
@@ -192,8 +192,8 @@ class _FocusFriendState extends State<FocusFriend> {
           child: CircularProgressIndicator(
             value: searching ? null : 1,
             strokeWidth: 3,
-            color: blossomPink.withValues(alpha: 0.75),
-            backgroundColor: const Color(0xFFFFEAF4),
+            color: sageGreen.withValues(alpha: 0.75),
+            backgroundColor: const Color(0xFFE6EFE9),
           ),
         ),
         ClipRRect(
@@ -227,7 +227,7 @@ class _FocusFriendState extends State<FocusFriend> {
         width: 56,
         height: 56,
         padding: const EdgeInsets.all(4),
-        color: const Color(0xFFFFF3F9),
+        color: const Color(0xFFF1F7F3),
         child: SvgPicture.asset(
           assetPath,
           fit: BoxFit.contain,
@@ -248,7 +248,7 @@ class _FocusFriendState extends State<FocusFriend> {
       fit: BoxFit.cover,
       errorBuilder: (context, _, __) => Icon(
         fallbackIcon ?? Icons.emoji_nature_rounded,
-        color: blossomPink,
+        color: sageGreen,
         size: size * 0.8,
       ),
     );
