@@ -19,10 +19,10 @@ class _ColorCycleButtonState extends State<ColorCycleButton>
   late AnimationController _controller;
 
   final List<Color> colors = [
-        Color(0xFF64FFDA), // mint
-        Color(0xFFFF80AB), // pink
-        Color(0xFFB388FF), // lavender
-        Color(0xFFFFF176), // yellow
+        Color(0xFFFF8CB9),
+        Color(0xFFFFB68F),
+        Color(0xFFFF7AAE),
+        Color(0xFFFF9EC6),
   ];
 
   @override
@@ -61,24 +61,22 @@ class _ColorCycleButtonState extends State<ColorCycleButton>
         final currentColor = getCurrentColor();
         return OutlinedButton(
           style: OutlinedButton.styleFrom(
-            backgroundColor: const Color(0xFF1A237E), // navy blue
-            side: BorderSide(color: currentColor, width: 4),
-            foregroundColor: currentColor,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            backgroundColor: const Color(0xFFFFF7FB),
+            side: BorderSide(color: currentColor.withValues(alpha: 0.7), width: 2),
+            foregroundColor: const Color(0xFF7D3A5B),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
           onPressed: widget.onPressed,
           child: Text(
             widget.text,
-            style: const TextStyle(
-                fontWeight: FontWeight.bold, // heavier font
-                fontSize: 16,               // optional: adjust size too
-              ),
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
           ),
         );
       },
     );
   }
 }
+

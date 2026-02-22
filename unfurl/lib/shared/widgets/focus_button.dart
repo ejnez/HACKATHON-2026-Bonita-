@@ -18,22 +18,23 @@ class FocusButton extends StatelessWidget {
 
     return OutlinedButton(
       style: OutlinedButton.styleFrom(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF4FFF9),
         foregroundColor: green,
-        side: BorderSide(color: green, width: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        side: BorderSide(color: green.withValues(alpha: 0.45), width: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(borderRadius),
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
       onPressed: onPressed,
       child: Text(
         text,
         style: const TextStyle(
-          fontWeight: FontWeight.w900, // heavier font
-          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          fontSize: 15,
         ),
       ),
     );
   }
 }
+
