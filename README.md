@@ -1,4 +1,4 @@
-# HACKATHON-2026-Bonita-
+# Bonita_Unfurl
 
 Unfurl is an AI-powered productivity app that unfurls messy thoughts into actionable tasks, stay focused with a guided timer, and earn flower rewards for completed work.
 
