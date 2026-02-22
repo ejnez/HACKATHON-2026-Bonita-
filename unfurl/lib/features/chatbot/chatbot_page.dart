@@ -17,6 +17,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
     final TextEditingController _controller = TextEditingController();
     bool _loading = false;
     String _status = 'Paste your brain dump and press send.';
+    List<Map<String, dynamic>> _generatedTasks = const [];
 
     @override
     void dispose() {
@@ -26,7 +27,12 @@ class _ChatbotPageState extends State<ChatbotPage> {
 
     Future<void> _send() async {
       final text = _controller.text.trim();
-      if (text.isEmpty) return;
+      if (text.isEmpty) {
+        setState(() {
+          _status = 'Please type your brain dump first.';
+        });
+        return;
+      }
 
       setState(() {
         _loading = true;
@@ -40,14 +46,19 @@ class _ChatbotPageState extends State<ChatbotPage> {
           message: text,
         );
         final ready = res['list_ready'] == true;
-        final count = (res['tasks'] as List<dynamic>? ?? const []).length;
+        final tasks = (res['tasks'] as List<dynamic>? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .toList(growable: false);
+        final count = tasks.length;
         setState(() {
+          _generatedTasks = ready ? tasks : const [];
           _status = ready
-              ? 'Task list ready. Saved $count tasks. Go to Tasks screen and refresh.'
+              ? 'Task list ready. Saved $count tasks.'
               : (res['reply']?.toString() ?? 'Agent replied.');
         });
       } catch (e) {
         setState(() {
+          _generatedTasks = const [];
           _status = 'Request failed: $e';
         });
       } finally {
@@ -114,6 +125,34 @@ class _ChatbotPageState extends State<ChatbotPage> {
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
+                          if (_generatedTasks.isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Your task list',
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ..._generatedTasks.map((task) {
+                              final rank = task['priority_rank']?.toString() ?? '-';
+                              final name = task['task_name']?.toString() ?? 'Untitled task';
+                              final mins = task['estimated_time']?.toString() ?? '?';
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('$rank. '),
+                                    Expanded(child: Text('$name ($mins min)')),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
                         ],
                       ),
                     ),

@@ -34,7 +34,7 @@ def predict_task_time(
         If predicted_minutes is None, ask the user for their estimate.
     """
     if category not in VALID_CATEGORIES:
-        raise ValueError(f"Invalid category '{category}'. Must be one of: {VALID_CATEGORIES}")
+        category = "Other"
 
     features = {
         "category": category,

@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException
@@ -45,15 +46,56 @@ async def call_prioritizer_agent(user_id: str, session_id: str, text: str) -> st
     return reply or "No response from agent."
 
 
-def parse_final_tasks(reply: str):
-    try:
-        cleaned = reply.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-        parsed = json.loads(cleaned)
-    except (json.JSONDecodeError, TypeError):
+def _extract_json_candidate(reply: str) -> str | None:
+    text = (reply or "").strip()
+    if not text:
         return None
 
-    if isinstance(parsed, list):
-        return parsed
+    fenced = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text, re.IGNORECASE)
+    if fenced:
+        return fenced.group(1).strip()
+
+    return text
+
+
+def _parse_task_list_payload(payload):
+    if isinstance(payload, list):
+        return payload
+
+    if isinstance(payload, dict):
+        for key in ("tasks", "final_tasks", "task_list", "list"):
+            value = payload.get(key)
+            if isinstance(value, list):
+                return value
+
+    return None
+
+
+def parse_final_tasks(reply: str):
+    candidate = _extract_json_candidate(reply)
+    if not candidate:
+        return None
+
+    parse_attempts = [candidate]
+
+    # Fallback for extra leading/trailing prose around a JSON array/object.
+    array_match = re.search(r"\[[\s\S]*\]", candidate)
+    object_match = re.search(r"\{[\s\S]*\}", candidate)
+    if array_match:
+        parse_attempts.append(array_match.group(0))
+    if object_match:
+        parse_attempts.append(object_match.group(0))
+
+    for attempt in parse_attempts:
+        try:
+            parsed = json.loads(attempt)
+        except (json.JSONDecodeError, TypeError):
+            continue
+
+        final_tasks = _parse_task_list_payload(parsed)
+        if final_tasks is not None:
+            return final_tasks
+
     return None
 
 
@@ -68,7 +110,8 @@ def save_tasks_for_session(user_id: str, session_id: str, final_tasks: list[dict
     now = datetime.now(timezone.utc)
     saved_tasks = []
 
-    for idx, task in enumerate(final_tasks, start=1):
+    valid_tasks = [t for t in final_tasks if isinstance(t, dict)]
+    for idx, task in enumerate(valid_tasks, start=1):
         task_id = f"{session_id}-{idx}"
         task_ref = db.collection("tasks").document(task_id)
         task_doc = task_ref.get()
@@ -128,11 +171,14 @@ async def chat(body: ChatMessage):
         "message": body.message
     })
 
-    raw_agent_reply = await call_prioritizer_agent(
-        user_id=body.user_id,
-        session_id=body.session_id,
-        text=body.message,
-    )
+    try:
+        raw_agent_reply = await call_prioritizer_agent(
+            user_id=body.user_id,
+            session_id=body.session_id,
+            text=body.message,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Prioritizer agent failed: {exc}") from exc
     final_tasks = parse_final_tasks(raw_agent_reply)
     is_ready = final_tasks is not None
     agent_reply = FINAL_LIST_MESSAGE if is_ready else raw_agent_reply
