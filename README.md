@@ -81,7 +81,7 @@ unfurl_icon.png
 ### Status
 This project includes working flows for:
 
-AI task generation
-Focus timing lifecycle
-Completion + flower awarding
-Flower streak tracking and display
+* AI task generation
+* Focus timing lifecycle
+* Completion + flower awarding
+* Flower streak tracking and display
