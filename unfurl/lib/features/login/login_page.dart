@@ -12,6 +12,31 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  bool _signingIn = false;
+
+  Future<void> _handleGoogleSignIn() async {
+    if (_signingIn) return;
+    setState(() => _signingIn = true);
+    try {
+      final credential = await AuthService.signInWithGoogle();
+      if (!mounted) return;
+      if (credential == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign-in cancelled.')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _signingIn = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,22 +62,41 @@ class _LoginPageState extends State<LoginPage> {
               /// -------------------------
               if (user == null) {
                 return Container(
-                  width: 330,
-                  padding: const EdgeInsets.all(22),
+                  width: 350,
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.92),
                     borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: const Color(0xFFD4E5DC)),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color.fromRGBO(31, 68, 53, 0.10),
+                        blurRadius: 20,
+                        offset: Offset(0, 10),
+                      ),
+                    ],
                   ),
 
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      Container(
+                        width: 82,
+                        height: 82,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFFE6F1EB),
+                          border: Border.all(color: const Color(0xFFCDE2D8)),
+                        ),
+                        child: Image.asset('assets/icon/Unfurl_icon.png'),
+                      ),
+                      const SizedBox(height: 14),
 
                       const Text(
                         'Unfurl',
                         style: TextStyle(
-                          fontSize: 30,
+                          fontSize: 32,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -67,18 +111,27 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 8),
 
                       const Text(
-                        'Keep your tasks and bouquet synced across devices.',
+                        'Keep tasks, streaks, and bouquets synced across devices.',
                         textAlign: TextAlign.center,
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 22),
 
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton.icon(
-                          onPressed: AuthService.signInWithGoogle,
-                          icon: const Icon(Icons.login_rounded),
-                          label: const Text('Continue with Google'),
+                          onPressed: _signingIn ? null : _handleGoogleSignIn,
+                          icon: _signingIn
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.login_rounded),
+                          label: Text(_signingIn ? 'Signing in...' : 'Continue with Google'),
                         ),
                       ),
                     ],
@@ -90,17 +143,26 @@ class _LoginPageState extends State<LoginPage> {
               /// LOGGED IN STATE
               /// -------------------------
               return Container(
-                width: 330,
-                padding: const EdgeInsets.all(22),
+                width: 350,
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.92),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: const Color(0xFFD4E5DC)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color.fromRGBO(31, 68, 53, 0.10),
+                      blurRadius: 20,
+                      offset: Offset(0, 10),
+                    ),
+                  ],
                 ),
 
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const Icon(Icons.verified_user_rounded, size: 48, color: sageGreen),
+                    const SizedBox(height: 8),
 
                     Text(
                       "Logged in as",
@@ -114,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                       textAlign: TextAlign.center,
                     ),
 
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 22),
 
                     SizedBox(
                       width: double.infinity,

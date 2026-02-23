@@ -81,6 +81,24 @@ class _FocusPageState extends State<FocusPage> {
     return int.tryParse('${value ?? ''}') ?? fallback;
   }
 
+  String _normalizeAwardFlowerFile(String raw) {
+    var value = raw.trim();
+    if (value.isEmpty) return '';
+    value = value.replaceAll('\\', '/').split('/').last.trim();
+    if (!value.toLowerCase().endsWith('.svg')) {
+      value = '$value.svg';
+    }
+
+    // Keep award names compatible with current local asset filenames.
+    const aliases = {
+      'Judicious Jonquil.svg': 'Judicious Jonquuil.svg',
+      'Persevering Pear.svg': 'Perservering Pear.svg',
+      'Persevering Poppy.svg': 'Perservering Poppy.svg',
+      'Productive Poinsettia.svg': 'Productive poinsettia.svg',
+    };
+    return aliases[value] ?? value;
+  }
+
   String _formatClock(int seconds) {
     final m = (seconds ~/ 60).toString().padLeft(2, '0');
     final s = (seconds % 60).toString().padLeft(2, '0');
@@ -234,8 +252,10 @@ class _FocusPageState extends State<FocusPage> {
         _awardResponse = Map<String, dynamic>.from(award);
         _awardError = false;
       });
-      final flower = award['selected_flower']?.toString() ?? 'Flower';
+      final flower = _normalizeAwardFlowerFile(award['selected_flower']?.toString() ?? '');
+      final flowerDisplayName = flower.isEmpty ? 'Flower' : flower.replaceAll('.svg', '');
       final message = award['congrats_message']?.toString() ?? 'Great work.';
+      final flowerAssetPath = flower.isEmpty ? null : 'assets/flowers/$flower';
 
       if (!mounted) return;
       await showDialog<void>(
@@ -244,7 +264,40 @@ class _FocusPageState extends State<FocusPage> {
         builder: (context) {
           return AlertDialog(
             title: const Text('Unfurl Reward Earned'),
-            content: Text('$flower\n\n$message'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (flowerAssetPath != null)
+                  Container(
+                    width: 110,
+                    height: 110,
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF2F8F4),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFD6E8DF)),
+                    ),
+                    child: SvgPicture.asset(
+                      flowerAssetPath,
+                      fit: BoxFit.contain,
+                      placeholderBuilder: (context) => const Center(
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                Text(
+                  flowerDisplayName,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
@@ -996,7 +1049,7 @@ class _WanderingBeeState extends State<_WanderingBee> with SingleTickerProviderS
                     child: Image.asset(
                       'assets/flowers/search_bee.png',
                       fit: BoxFit.cover,
-                      errorBuilder: (context, _, __) => const Icon(
+                      errorBuilder: (context, error, stackTrace) => const Icon(
                         Icons.emoji_nature_rounded,
                         color: sageGreen,
                         size: 50,

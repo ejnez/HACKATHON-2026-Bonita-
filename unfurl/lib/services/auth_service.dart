@@ -17,6 +17,14 @@ class AuthService {
         return await _auth.signInWithPopup(provider);
       }
 
+      // google_sign_in is supported on mobile (and macOS), but not on Windows/Linux.
+      if (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux) {
+        throw Exception(
+          'Google sign in is not supported on this platform. Use Android, iOS, macOS, or Web.',
+        );
+      }
+
       // Mobile login
       final googleSignIn = GoogleSignIn();
 
@@ -33,9 +41,12 @@ class AuthService {
       );
 
       return await _auth.signInWithCredential(credential);
+    } on FirebaseAuthException catch (e) {
+      debugPrint('Google sign in FirebaseAuthException: ${e.code} ${e.message}');
+      throw Exception('Google sign in failed: ${e.message ?? e.code}');
     } catch (e) {
-      debugPrint("Google sign in error: $e");
-      return null;
+      debugPrint('Google sign in error: $e');
+      throw Exception('Google sign in failed: $e');
     }
   }
 

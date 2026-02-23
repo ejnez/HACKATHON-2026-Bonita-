@@ -103,6 +103,22 @@ class _FocusFriendState extends State<FocusFriend> {
     }
   }
 
+  String _normalizeAwardFlower(String raw) {
+    var value = raw.trim();
+    if (value.isEmpty) return '';
+    value = value.replaceAll('\\', '/').split('/').last.trim();
+    if (!value.toLowerCase().endsWith('.svg')) {
+      value = '$value.svg';
+    }
+    const aliases = {
+      'Judicious Jonquil.svg': 'Judicious Jonquuil.svg',
+      'Persevering Pear.svg': 'Perservering Pear.svg',
+      'Persevering Poppy.svg': 'Perservering Poppy.svg',
+      'Productive Poinsettia.svg': 'Productive poinsettia.svg',
+    };
+    return aliases[value] ?? value;
+  }
+
   @override
   Widget build(BuildContext context) {
     String line;
@@ -220,7 +236,11 @@ class _FocusFriendState extends State<FocusFriend> {
       return _friendAvatar(icon: Icons.local_florist_rounded, beeHappy: true);
     }
 
-    final assetPath = 'assets/flowers/$flowerName';
+    final normalized = _normalizeAwardFlower(flowerName);
+    if (normalized.isEmpty) {
+      return _friendAvatar(icon: Icons.local_florist_rounded, beeHappy: true);
+    }
+    final assetPath = 'assets/flowers/$normalized';
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Container(
@@ -246,7 +266,7 @@ class _FocusFriendState extends State<FocusFriend> {
       width: size,
       height: size,
       fit: BoxFit.cover,
-      errorBuilder: (context, _, __) => Icon(
+      errorBuilder: (context, error, stackTrace) => Icon(
         fallbackIcon ?? Icons.emoji_nature_rounded,
         color: sageGreen,
         size: size * 0.8,

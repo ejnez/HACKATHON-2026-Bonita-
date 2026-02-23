@@ -27,6 +27,11 @@ final ThemeData appTheme = ThemeData(
     foregroundColor: cocoaText,
     elevation: 0,
     scrolledUnderElevation: 0,
+    titleTextStyle: TextStyle(
+      fontSize: 22,
+      fontWeight: FontWeight.w800,
+      color: cocoaText,
+    ),
   ),
   cardTheme: CardThemeData(
     color: Colors.white.withValues(alpha: 0.9),
@@ -46,6 +51,14 @@ final ThemeData appTheme = ThemeData(
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
     backgroundColor: blossomPink,
     foregroundColor: Colors.white,
+  ),
+  outlinedButtonTheme: OutlinedButtonThemeData(
+    style: OutlinedButton.styleFrom(
+      foregroundColor: blossomPink,
+      side: BorderSide(color: blossomPink.withValues(alpha: 0.28), width: 1.6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    ),
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
@@ -77,6 +90,11 @@ final ThemeData appTheme = ThemeData(
       fontWeight: FontWeight.w700,
       color: cocoaText,
     ),
+    titleSmall: TextStyle(
+      fontSize: 15,
+      fontWeight: FontWeight.w700,
+      color: cocoaText,
+    ),
     bodyLarge: TextStyle(
       fontSize: 16,
       color: cocoaText,
@@ -87,6 +105,11 @@ final ThemeData appTheme = ThemeData(
       color: cocoaText,
       height: 1.35,
     ),
+  ),
+  dividerTheme: DividerThemeData(
+    color: blossomPink.withValues(alpha: 0.18),
+    thickness: 1,
+    space: 18,
   ),
 );
 

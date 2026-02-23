@@ -161,13 +161,28 @@ class _ChatbotPageState extends State<ChatbotPage> {
                     Container(
                       padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: Colors.white.withValues(alpha: 0.82),
                         borderRadius: BorderRadius.circular(18),
                         border: Border.all(color: const Color(0xFFD7E7DE)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color.fromRGBO(40, 72, 57, 0.08),
+                            blurRadius: 12,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.spa_rounded, color: sageGreen, size: 20),
+                          Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEAF4EE),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.spa_rounded, color: sageGreen, size: 20),
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Column(
@@ -178,7 +193,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                                   style: Theme.of(context).textTheme.titleSmall,
                                 ),
                                 Text(
-                                  'Simple, calm, and focused.',
+                                  'Dump thoughts. Get a sorted plan.',
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ],
@@ -195,9 +210,16 @@ class _ChatbotPageState extends State<ChatbotPage> {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.82),
+                          color: Colors.white.withValues(alpha: 0.86),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: const Color(0xFFD9E9E0)),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color.fromRGBO(40, 72, 57, 0.10),
+                              blurRadius: 14,
+                              offset: Offset(0, 6),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
@@ -370,9 +392,9 @@ class _ChatBubble extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.03),
-              blurRadius: 4,
-              offset: const Offset(0, 1),
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
